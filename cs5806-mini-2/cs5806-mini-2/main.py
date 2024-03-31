@@ -24,7 +24,8 @@ class Input:
 
 
 class MultiLayerPerceptron:
-    def __init__(self, nLayers, arch, batch_size=10, lr=0.01, epochs=10000, sse_threshold=0.02, a_function="tanh"):
+    def __init__(self, nLayers, arch, batch_size=10, lr=0.01, epochs=10000, sse_threshold=0.02, a_function="tanh",
+                 momentum=0.0):
         """
         Initializes the MLP based on the user-defined architecture.
         :param nLayers: Integer, the number of layers in the MLP.
@@ -50,6 +51,9 @@ class MultiLayerPerceptron:
         self.a_function = a_function
         self.sse_threshold = sse_threshold
         self.sse_per_iteration = []
+        self.momentum = momentum
+        self.prev_deltas_w = [np.zeros(w.shape) for w in self.weights]
+        self.prev_deltas_b = [np.zeros(b.shape) for b in self.biases]
 
     def feedforward(self, i):
         """
@@ -88,7 +92,7 @@ class MultiLayerPerceptron:
             targ = np.array(target).flatten()
             for j in range(len(response)):
                 errors.append((response[j] - targ[j]) ** 2)
-            self.sse_per_iteration.append(round(np.sum(errors), 4))
+            self.sse_per_iteration.append(round(np.sum(errors), 2))
             print(self.sse_per_iteration[-1])
             if len(self.sse_per_iteration) > 0 and self.sse_per_iteration[-1] <= self.sse_threshold:
                 break
@@ -140,8 +144,12 @@ class MultiLayerPerceptron:
             # deltas_b = [delta_b] + deltas_b
 
         for i in range(len(self.weights)):
-            self.weights[i] -= deltas_w[i]
-            self.biases[i] -= deltas_b[i]
+            self.weights[i] -= (self.prev_deltas_b[i] * self.momentum + (1 - self.momentum) * deltas_w[i])
+            self.biases[i] -= (self.prev_deltas_b[i] * self.momentum + (1 - self.momentum) * deltas_b[i])
+            # self.biases[i] -= deltas_b[i]
+
+        self.prev_deltas_b = deltas_b
+        self.prev_deltas_w = deltas_w
 
     def error(self, output_activations, y):
         return np.round(y - output_activations, 4)
@@ -245,6 +253,38 @@ def mlp_init_prompt():
     return nLayers, arch, i
 
 
+def report_plot_with_momentum(p, target, network_output, sse_per_iteration, t_label="Target", nLayers=0, arch=[], learning_rate=0.01, momentum=0.0):
+    """
+    Plots the target and response functions.
+    :param p: Input, the input data.
+    :param target: List, the target function values.
+    :param network_output: List, the network output.
+    :param sse_per_iteration: List, the sum of squared errors per iteration.
+    :return: None
+    """
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+    axs[0].plot(p, target, 'ro', label=t_label)
+    axs[0].plot(p, network_output, 'g-', label='Network output')
+    axs[0].set_title("Number of iterations: " + str(len(sse_per_iteration)) + "\n" + "Number of layers: " + str(
+        nLayers) + "\n" + "Architecture: " + str(arch))
+    axs[0].set_xlabel('p')
+    axs[0].set_ylabel('Magnitude')
+    axs[0].grid()
+    axs[0].legend()
+
+    iterations = range(1, len(sse_per_iteration) + 1)
+    axs[1].loglog(iterations, sse_per_iteration, marker='o', linestyle='-')
+    axs[1].set_title("SSE: " + str(sse_per_iteration[-1]) + "\n" + "Learning rate: " + str(
+        learning_rate) + "\n" + "Number of iterations: " + str(len(sse_per_iteration)) + "\n" + "Architecture: " + str(
+        arch) + "\n" + "SSE threshold: " + str(0.01) + "\n" + "Momentum: " + str(momentum))
+    axs[1].set_xlabel('Number of iterations (log scale)')
+    axs[1].set_ylabel('Magnitude (log scale)')
+    axs[1].grid()
+    axs[1].legend(['SSE'])
+
+    plt.tight_layout()
+    plt.show()
+
 def report_plot(p, target, network_output, sse_per_iteration, t_label="Target", nLayers=0, arch=[],
                 learning_rate=0.01):
     """
@@ -302,7 +342,7 @@ def q1():
     # nLayers, arch, input = mlp_init_prompt()
     nLayers = 4
     arch = [2, 4, 3, 1]
-    input_data = [x for x in np.linspace(-2*math.pi, 2*math.pi, 100)]
+    input_data = [x for x in np.linspace(-2 * math.pi, 2 * math.pi, 100)]
     mlp = MultiLayerPerceptron(nLayers, arch)
     target = [math.sin(x) for x in input_data]
     response = mlp.feedforward(input_data)
@@ -396,14 +436,15 @@ def mychirp(t, f0, t1, f1, phase):
     x = np.sin(2 * np.pi * ((f0 + k / 2 * t) * t + phase))
     return x
 
+
 def q4():
     f = 100
-    step = 1/f
+    step = 1 / f
     t0 = 0
     t1 = 1
     x = np.linspace(t0, t1, 200)
     f0 = 1
-    f1 = f/20
+    f1 = f / 20
     t = mychirp(x, f0, t1, f1, phase=0)
     plt.plot(x, t)
     plt.show()
@@ -419,8 +460,68 @@ def q4():
                 arch=arch, learning_rate=0.02)
 
 
+def q5():
+    q5_sin()
+    q5_quadratic()
+    q5_exp()
+    q5_comp()
+
+
+def q5_sin():
+    nLayers = 2
+    arch = [7, 1]
+    input_data = [x for x in np.linspace(-2 * math.pi, 2 * math.pi, 100)]
+    target = np.array(np.sin(input_data)).tolist()
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+                               a_function="tanh", momentum=0.5)
+    mlp.SGD(input_data, target)
+    response = mlp.feedforward(input_data)
+    report_plot_with_momentum(input_data, target, response, mlp.sse_per_iteration, t_label='Sinusoidal function', nLayers=nLayers,
+                arch=arch, learning_rate=0.02, momentum=0.5)
+
+
+def q5_quadratic():
+    nLayers = 2
+    arch = [3, 1]
+    input_data = [x for x in np.linspace(-2, 2, 100)]
+    target = [x ** 2 for x in input_data]
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+                               a_function="tanh", momentum=0.5)
+    mlp.SGD(input_data, target)
+    response = mlp.feedforward(input_data)
+    report_plot_with_momentum(input_data, target, response, mlp.sse_per_iteration, t_label='Quadratic function', nLayers=nLayers,
+                arch=arch, learning_rate=0.02, momentum=0.5)
+
+
+def q5_exp():
+    nLayers = 2
+    arch = [3, 1]
+    input_data = [x for x in np.linspace(0, 2, 100)]
+    target = [math.exp(x) for x in input_data]
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+                               a_function="tanh", momentum=0.5)
+    mlp.SGD(input_data, target)
+    response = mlp.feedforward(input_data)
+    report_plot_with_momentum(input_data, target, response, mlp.sse_per_iteration, t_label='Exponential function', nLayers=nLayers,
+                arch=arch, learning_rate=0.02, momentum=0.5)
+
+
+def q5_comp():
+    nLayers = 3
+    arch = [10, 5, 1]
+    input_data = [x for x in np.linspace(-2 * math.pi, 2 * math.pi, 100)]
+    target = [math.sin(x) ** 2 + math.cos(x) ** 3 for x in input_data]
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+                               a_function="tanh", momentum=0.5)
+    mlp.SGD(input_data, target)
+    response = mlp.feedforward(input_data)
+    report_plot_with_momentum(input_data, target, response, mlp.sse_per_iteration, t_label='Sinusoidal function', nLayers=nLayers,
+                arch=arch, learning_rate=0.02, momentum=0.5)
+
+
 if __name__ == '__main__':
     # q1()
-    # q2()
-    q3()
+    q2()
+    # q3()
     # q4()
+    q5()
