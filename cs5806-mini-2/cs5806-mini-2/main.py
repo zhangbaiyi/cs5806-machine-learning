@@ -65,6 +65,8 @@ class MultiLayerPerceptron:
         for p in i:
             a = p
             for i in range(len(self.weights) - 1):
+                # use sigmoid
+                # use @ instead of
                 a = activate(np.dot(self.weights[i], a) + self.biases[i], type=self.a_function)
             a = purelin(np.dot(self.weights[-1], a) + self.biases[-1])
             o.append(a.flatten()[0])
@@ -93,7 +95,7 @@ class MultiLayerPerceptron:
             for j in range(len(response)):
                 errors.append((response[j] - targ[j]) ** 2)
             self.sse_per_iteration.append(round(np.sum(errors), 2))
-            print(self.sse_per_iteration[-1])
+            # print(self.sse_per_iteration[-1])
             if len(self.sse_per_iteration) > 0 and self.sse_per_iteration[-1] <= self.sse_threshold:
                 break
             if i % 1000 == 0:
@@ -132,6 +134,8 @@ class MultiLayerPerceptron:
             s = np.dot(np.diag(activate_prime(n_list[-l], type=self.a_function).flatten()),
                        np.dot(self.weights[-l + 1].T, s_list[-l + 1]))
             s_list = [s] + s_list
+            # delta_w = np.array(self.lr * np.dot(s, a_list[-l - 1].T)).reshape(self.weights[-l].shape)
+            # delta_b = np.array(self.lr * s).reshape(self.biases[-l].shape)
             delta_w = np.array(self.lr / self.batch_size * np.dot(s, a_list[-l - 1].T)).reshape(self.weights[-l].shape)
             delta_b = np.array(self.lr / self.batch_size * s).reshape(self.biases[-l].shape)
             # delta_w = np.array(self.lr * np.dot(s_list[-l], np.array(a_list[-l - 1]).T)).reshape(self.weights[-l].shape)
@@ -358,7 +362,7 @@ def q2_comp():
     arch = [10, 5, 1]
     input_data = [x for x in np.linspace(-2 * math.pi, 2 * math.pi, 100)]
     target = [math.sin(x) ** 2 + math.cos(x) ** 3 for x in input_data]
-    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=10, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="tanh")
     mlp.SGD(input_data, target)
     response = mlp.feedforward(input_data)
@@ -371,7 +375,7 @@ def q2_exp():
     arch = [3, 1]
     input_data = [x for x in np.linspace(0, 2, 100)]
     target = [math.exp(x) for x in input_data]
-    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=10, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="tanh")
     mlp.SGD(input_data, target)
     response = mlp.feedforward(input_data)
@@ -386,8 +390,14 @@ def q2_sin():
 
     target = np.array(np.sin(input_data)).tolist()
     mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
-                               a_function="tanh")
+                               a_function="sigmoid")
+    print("Initial weights and biases:")
+    print(mlp.weights)
+    print(mlp.biases)
     mlp.SGD(input_data, target)
+    print("Final weights and biases:")
+    print(mlp.weights)
+    print(mlp.biases)
     response = mlp.feedforward(input_data)
     report_plot(input_data, target, response, mlp.sse_per_iteration, t_label='Sinusoidal function', nLayers=nLayers,
                 arch=arch, learning_rate=0.02)
@@ -398,7 +408,7 @@ def q2_quadratic():
     arch = [3, 1]
     input_data = [x for x in np.linspace(-2, 2, 100)]
     target = [x ** 2 for x in input_data]
-    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=10, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="tanh")
     mlp.SGD(input_data, target)
     response = mlp.feedforward(input_data)
@@ -511,7 +521,7 @@ def q5_comp():
     arch = [10, 5, 1]
     input_data = [x for x in np.linspace(-2 * math.pi, 2 * math.pi, 100)]
     target = [math.sin(x) ** 2 + math.cos(x) ** 3 for x in input_data]
-    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
+    mlp = MultiLayerPerceptron(nLayers, arch, batch_size=10, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="tanh", momentum=0.5)
     mlp.SGD(input_data, target)
     response = mlp.feedforward(input_data)
@@ -521,7 +531,14 @@ def q5_comp():
 
 if __name__ == '__main__':
     # q1()
-    q2()
+    # q2()
     # q3()
     # q4()
-    q5()
+    # q5()
+    # q2_sin()
+    # q5_comp()
+
+    np.random.seed(5806)
+    q2_sin()
+    # np.random.seed(5806)
+    # q2_quadratic()
