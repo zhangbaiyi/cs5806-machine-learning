@@ -40,7 +40,7 @@ class MultiLayerPerceptron:
         self.nlist = []
         self.slist = []
 
-    def hail_jafari_feedforward(self, p):
+    def feedforward(self, p):
         n = None
         a = None
         self.nlist = []
@@ -57,7 +57,7 @@ class MultiLayerPerceptron:
         a = purelin(n)
         self.alist.append(a)
 
-    def hail_jafari_backprop(self, input_data, target):
+    def backprop(self, input_data, target):
         E = [1000]
         iterations = 0
         SSE = 0
@@ -68,7 +68,7 @@ class MultiLayerPerceptron:
             if iterations > self.epochs:
                 break
             for p, t in zip(input_data, target):
-                self.hail_jafari_feedforward(p)
+                self.feedforward(p)
                 # print("Error: ", t - self.alist[-1])
                 s_M = -2 * purelin_prime(self.nlist[-1]) * (t - self.alist[-1])
                 self.slist[-1] = s_M
@@ -87,7 +87,7 @@ class MultiLayerPerceptron:
                 for j in range(len(self.weights)):
                     self.weights[j] = self.weights[j] - (self.lr * deltas_w[j])
                     self.biases[j] = self.biases[j] - (self.lr * deltas_b[j])
-                self.hail_jafari_feedforward(p)
+                self.feedforward(p)
                 # print("Error after: ", t - self.alist[-1])
                 SSE += (t - self.alist[-1]) ** 2
                 # print("After: ", p, t)
@@ -97,7 +97,7 @@ class MultiLayerPerceptron:
             # print(E[-1])
         self.sse_per_iteration = E[1:]
 
-    def hail_jafari_backprop_momentum(self, input_data, target):
+    def backprop_momentum(self, input_data, target):
         E = [1000]
         iterations = 0
         SSE = 0
@@ -108,7 +108,7 @@ class MultiLayerPerceptron:
             if iterations > self.epochs:
                 break
             for p, t in zip(input_data, target):
-                self.hail_jafari_feedforward(p)
+                self.feedforward(p)
                 s_M = -2 * purelin_prime(self.nlist[-1]) * (t - self.alist[-1])
                 self.slist[-1] = s_M
                 deltas_w = [np.array(self.slist[-1] @ self.alist[-2].T)]
@@ -131,7 +131,7 @@ class MultiLayerPerceptron:
                 for j in range(len(self.weights)):
                     self.weights[j] = self.weights[j] - (self.lr * deltas_w[j])
                     self.biases[j] = self.biases[j] - (self.lr * deltas_b[j])
-                self.hail_jafari_feedforward(p)
+                self.feedforward(p)
                 SSE += (t - self.alist[-1]) ** 2
             E.append(float(SSE))
             SSE = 0
@@ -331,7 +331,7 @@ def q1():
     target = [np.sin(x) for x in input_data]
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     q1_plt_target_and_response(input_data, target, network_output)
     print("Weights and biases initialized:")
@@ -352,10 +352,10 @@ def q2_comp():
     print("Initial weights and biases:")
     print(mlp.weights)
     print(mlp.biases)
-    mlp.hail_jafari_backprop(input_data, target)
+    mlp.backprop(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='Complex function',
                 nLayers=nLayers,
@@ -375,10 +375,10 @@ def q2_exp():
     print("Initial weights and biases:")
     print(mlp.weights)
     print(mlp.biases)
-    mlp.hail_jafari_backprop(input_data, target)
+    mlp.backprop(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='Exponential function',
                 nLayers=nLayers,
@@ -399,10 +399,10 @@ def q2_sin():
     print("Initial weights and biases:")
     print(mlp.weights)
     print(mlp.biases)
-    mlp.hail_jafari_backprop(input_data, target)
+    mlp.backprop(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='Sinusoidal function',
                 nLayers=nLayers,
@@ -423,10 +423,10 @@ def q2_quadratic():
     print("Initial weights and biases:")
     print(mlp.weights)
     print(mlp.biases)
-    mlp.hail_jafari_backprop(input_data, target)
+    mlp.backprop(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='Quadratic function',
                 nLayers=nLayers,
@@ -450,10 +450,10 @@ def q3():
         print("Initial weights and biases:")
         print(mlp.weights)
         print(mlp.biases)
-        mlp.hail_jafari_backprop(input_data, target)
+        mlp.backprop(input_data, target)
         network_output = []
         for i in range(len(input_data)):
-            mlp.hail_jafari_feedforward(input_data[i])
+            mlp.feedforward(input_data[i])
             network_output.append(mlp.alist[-1][0][0])
         report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='Sinusoidal function',
                     nLayers=nLayers,
@@ -491,10 +491,10 @@ def q4():
     print("Initial weights and biases:")
     print(mlp.weights)
     print(mlp.biases)
-    mlp.hail_jafari_backprop(input_data, target)
+    mlp.backprop(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='chirp',
                 nLayers=nLayers,
@@ -514,10 +514,10 @@ def q5_sin():
     target = np.array(np.sin(input_data)).tolist()
     mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="sigmoid", momentum=0.5)
-    mlp.hail_jafari_backprop_momentum(input_data, target)
+    mlp.backprop_momentum(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot_with_momentum(input_data, target, network_output, mlp.sse_per_iteration, t_label='Sinusoidal function',
                 nLayers=nLayers,
@@ -536,10 +536,10 @@ def q5_quadratic():
     target = [x ** 2 for x in input_data]
     mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="sigmoid", momentum=0.5)
-    mlp.hail_jafari_backprop_momentum(input_data, target)
+    mlp.backprop_momentum(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot_with_momentum(input_data, target, network_output, mlp.sse_per_iteration, t_label='Quadratic function',
                 nLayers=nLayers,
@@ -559,10 +559,10 @@ def q5_exp():
     target = [np.exp(x) for x in input_data]
     mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="sigmoid", momentum=0.5)
-    mlp.hail_jafari_backprop_momentum(input_data, target)
+    mlp.backprop_momentum(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot_with_momentum(input_data, target, network_output, mlp.sse_per_iteration, t_label='Exponential function',
                 nLayers=nLayers,
@@ -582,10 +582,10 @@ def q5_comp():
     target = [np.sin(x) ** 2 + np.cos(x) ** 3 for x in input_data]
     mlp = MultiLayerPerceptron(nLayers, arch, batch_size=100, lr=0.02, epochs=200000, sse_threshold=0.01,
                                a_function="sigmoid", momentum=0.5)
-    mlp.hail_jafari_backprop_momentum(input_data, target)
+    mlp.backprop_momentum(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot_with_momentum(input_data, target, network_output, mlp.sse_per_iteration, t_label='Complex function',
                               nLayers=nLayers,
@@ -612,10 +612,10 @@ def q6():
         print("Initial weights and biases:")
         print(mlp.weights)
         print(mlp.biases)
-        mlp.hail_jafari_backprop_momentum(input_data, target)
+        mlp.backprop_momentum(input_data, target)
         network_output = []
         for i in range(len(input_data)):
-            mlp.hail_jafari_feedforward(input_data[i])
+            mlp.feedforward(input_data[i])
             network_output.append(mlp.alist[-1][0][0])
         report_plot_with_momentum(input_data, target, network_output, mlp.sse_per_iteration,
                                   t_label='Sinusoidal function',
@@ -634,10 +634,10 @@ def prompt_and_plot():
     print("Initial weights and biases:")
     print(mlp.weights)
     print(mlp.biases)
-    mlp.hail_jafari_backprop(input_data, target)
+    mlp.backprop(input_data, target)
     network_output = []
     for i in range(len(input_data)):
-        mlp.hail_jafari_feedforward(input_data[i])
+        mlp.feedforward(input_data[i])
         network_output.append(mlp.alist[-1][0][0])
     report_plot(input_data, target, network_output, mlp.sse_per_iteration, t_label='User-defined function',
                 nLayers=nLayers,
@@ -646,12 +646,12 @@ def prompt_and_plot():
 
 if __name__ == '__main__':
     q1()
-    # q2_sin()
+    q2_sin()
     # q2_quadratic()
     # q2_exp()
     # q2_comp()
     # q3()
-    q4()
+    # q4()
     # q5_sin()
     # q5_quadratic()
     # q5_exp()
